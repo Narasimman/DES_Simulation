@@ -499,9 +499,9 @@ int second_pass() {
     linenumber = 0;
     flip = true;
     instruction_counter = 0;
-    myfile.open(FILE_NAME, ios::in);
-    cout << "Memory Map" << endl;
+    myfile.open(FILE_NAME, ios::in);    
 	if (myfile.is_open()) {
+		cout << "Memory Map" << endl;
 		while(!myfile.eof()){
 			resolve_address();
 		}
