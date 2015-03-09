@@ -16,11 +16,12 @@ class Scheduler {
         //Quantum
         int quantum;
 
+ 
     public:
 
         // getters and setters
         void setType(int);
-        int getType();
+        string getType();
 
         void setReadyQueue(vector<Process>);
         vector<Process> getReadyQueue();

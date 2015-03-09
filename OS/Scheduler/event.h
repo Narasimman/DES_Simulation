@@ -16,6 +16,8 @@ class Event {
 
         int transition;
 
+        int inReady;
+
         Event();
         Event(int, int, int);
 };

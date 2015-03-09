@@ -2,12 +2,20 @@
 
 using namespace std;
 
+const string scheduler_types[5] = {
+    "FCFS",
+    "LCFS",
+    "SJF",
+    "RR",
+    "PRIO"
+};
+
 void Scheduler::setType(int t) {
     type = t;
 }
 
-int Scheduler::getType() {
-    return type;
+string Scheduler::getType() {
+    return scheduler_types[type];
 }
 
 void Scheduler::setReadyQueue(vector<Process> q) {

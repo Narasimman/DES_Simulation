@@ -20,7 +20,7 @@ Event Processor::getEvent() {
 // Insert an event based on the timestamp. Time stamp ordered event queue
 void Processor::putEvent(Event e) {
    int loc = eventQueue.size();
-   for (int i = 0; i < eventQueue.size(); ++i) {
+   for (unsigned int i = 0; i < eventQueue.size(); ++i) {
        if (e.timestamp < eventQueue[i].timestamp) {
            loc = i;
            break;

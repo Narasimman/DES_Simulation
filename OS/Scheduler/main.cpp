@@ -8,12 +8,16 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <iomanip>
 
 #include "process.h"
 #include "event.h"
 #include "scheduler.h"
 #include "processor.h"
 #include "FCFS.h"
+#include "LCFS.h"
+#include "RR.h"
+#include "SJF.h"
 
 using namespace std;
 
@@ -33,15 +37,72 @@ const string states[6] = {
     "RUNNG -> BLOCK",
     "BLOCK -> READY",
     "RUNNG -> READY",
-    "DONE"
+    "Done"
 };
+
+void printsummary() {
+    cout << scheduler->getType();
+
+    if(scheduler->getQuantum() < 9999) {
+        cout << " " << scheduler->getQuantum();
+    }
+    cout << endl;
+    
+    for(unsigned int i = 0; i < proc.size(); i++) {
+        cout << setfill('0') << setw(4) << i << ": "; // Counter
+        cout << setfill(' ') << setw(4) << proc[i].getArrivalTime();
+        cout << " " << setfill(' ') << setw(4) << proc[i].getTotalCPUTime();
+        cout << " " << setfill(' ') << setw(4) << proc[i].getMaxCPUBurstTime();
+        cout << " " << setfill(' ') << setw(4) << proc[i].getMaxIOBurstTime();
+        cout << " " << proc[i].getPriority();
+        cout << " | ";
+        cout << setfill(' ') << setw(5) << proc[i].getFinishingTime() << " ";
+        cout << setfill(' ') << setw(5) << proc[i].getTurnaroundTime() << " ";    
+        cout << setfill(' ') << setw(5) << proc[i].getIOTime() << " ";
+        cout << setfill(' ') << setw(5) << proc[i].getCpuWaitingTime();
+        cout << endl;
+    }
+}
+
+void printfinalsummary() {
+    int    maxfintime = cpucycles;
+    
+    double cpu_util = 0.0;
+    double io_util  = 0.0;
+    double avg_turnaround = 0.0;
+    double avg_waittime = 0.0;
+
+    for(unsigned int i = 0;i < proc.size(); i++) {
+        cpu_util += proc[i].getTotalCPUTime();
+        io_util += proc[i].getIOTime();
+        avg_turnaround += proc[i].getTurnaroundTime();
+        avg_waittime += proc[i].getCpuWaitingTime();       
+    }
+
+    cpu_util = (cpu_util/cpucycles) * 100.0;
+    io_util = (io_util/cpucycles) * 100.0;
+    avg_turnaround = avg_turnaround / (double) proc.size();
+    avg_waittime = avg_waittime/ (double) proc.size();
+
+    double throughput = (double)proc.size() / ((double)maxfintime / 100.0);
+    printf("SUM: %d %.2lf %.2lf %.2lf %.2lf %.3lf\n",
+        maxfintime,
+        cpu_util,
+        io_util,
+        avg_turnaround,
+        avg_waittime, 
+        throughput);
+}
 
 void printstatus(Event e, Process p) {
 //        printf("%d %d : %s %d %d\n", cpucycles, p.getPid(),
   //                  states[e.transition].c_str(), p.getRemainingCPU(), p.getPriority());
-        cout << cpucycles << " " << p.getPid() << " : " << states[e.transition].c_str() << " ";
-        if(e.transition == 1 || e.transition == 2) cout << "rem=" << p.getRemainingCPU() << " ";
-        if(e.transition == 1) cout << "prio=" << p.getPriority();
+        cout << cpucycles << " " << p.getPid() << " " << p.getPrevStateTime() << ": " << states[e.transition].c_str();
+        if(e.transition == 4) cout << " ";
+        if(e.transition == 1 || e.transition == 4) cout << " cb=" << p.getRemainingBurst();
+        if(e.transition == 2) cout << "  ib=" << p.getIOBurst();
+        if(e.transition == 1 || e.transition == 2 || e.transition == 4) cout << " rem=" << p.getRemainingCPU();
+        if(e.transition == 1 || e.transition == 4 ) cout << " prio=" << p.getDynPrio();
         cout << endl;
 }
 
@@ -65,13 +126,16 @@ vector<Process> getProcesses() {
     Process pr;
     char buf[80];
     int id = 0;
+    int prio;
 
     while (fgets(buf, 80, pFile) != NULL) {
         int a, t, c, i;
         sscanf(buf, "%d%d%d%d", &a, &t, &c, &i);
         pr = Process(id++, a, t, c, i);
         // CHECK PRIO CLACULATION
-        pr.setPriority(1 + (getRandomNumber() % pr.getMaxCPUBurstTime()));
+        prio = 1 + (getRandomNumber() % 4);
+        pr.setPriority(prio);
+        pr.setDynPrio(prio);
         p.push_back(pr);
     }
     return p;
@@ -87,6 +151,7 @@ void simulate() {
     int cpuburst  = 0;
     int nextAvailable = 0;
     cpucycles = 0;
+    int rand;
     int quantum = scheduler->getQuantum(); //#TODO
     while(!processor.queueEmpty()) {
 
@@ -101,7 +166,9 @@ void simulate() {
         if(curEvent.transition == 0) {
             printstatus(curEvent, proc[id]);
             Event e(proc[id].getArrivalTime(), id, 1);
+            e.inReady = cpucycles;
             processor.putEvent(e);
+            proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             scheduler->add_process(proc[id]);
         }
         // Ready -> Running
@@ -114,29 +181,44 @@ void simulate() {
                 continue;
             }
 
+            Process pr = scheduler->get_next_process();
+            id = pr.getPid();
 
-            cpuburst = 1 + (getRandomNumber() % proc[id].getMaxCPUBurstTime());
-            //cout << proc[id].getRemainingCPU() << " " << cpuburst << " ** " << endl;
-            
-            // Quantum is lesser than remaining CPU (RR)
-            if(quantum <= proc[id].getRemainingCPU()) {
+            // First calculate the CPU Wait time
+            proc[id].setCpuWaitingTime(proc[id].getCpuWaitingTime() + cpucycles - curEvent.inReady);
+            // TODO GET random number only when remaining cpu is zero
+            if(proc[id].getRemainingBurst() == 0) {
+                rand = 1 + (getRandomNumber() % proc[id].getMaxCPUBurstTime());
+                if(rand > proc[id].getRemainingCPU()) {
+                     proc[id].setRemainingBurst(proc[id].getRemainingCPU());
+                } else {
+                    proc[id].setRemainingBurst(rand);
+                }
+                //cout << proc[id].getRemainingCPU() << " " << cpuburst << " ** " << endl;
+            }
+            cpuburst = proc[id].getRemainingBurst();
+            // Quantum is lesser than remaining CPU Butst(RR)
+            if(quantum <= proc[id].getRemainingBurst()) {
                 // We have to pre-empt in this case
-                if(quantum <= cpuburst) { 
-                        printstatus(curEvent, proc[id]);
-                        Process p = scheduler->get_next_process();
-                        Event e(cpucycles + q, id, 4);
-                        processor.putEvent(e);
-                        proc[id].setRemainingCPU(proc[id].getRemainingCPU() - q);
-                        nextAvailable = cpucycles + q;                   
+                if(quantum < cpuburst) {
+                    printstatus(curEvent, proc[id]);
+                    Event e(cpucycles + quantum, id, 4);
+                    processor.putEvent(e);
+                    proc[id].setRemainingBurst(cpuburst - quantum);
+                    proc[id].setPrevStateTime(quantum);
+                    proc[id].setRemainingCPU(proc[id].getRemainingCPU() - quantum);
+                    nextAvailable = cpucycles + quantum;        
                     
                 } else {
                     // Going into IO blocked mode
                     // Generate CPU burst from the random file
                     printstatus(curEvent, proc[id]);
-                    Process p = scheduler->get_next_process();
                     Event e(cpucycles + cpuburst, id, 2);
                     processor.putEvent(e);
+                    proc[id].setRemainingBurst(0);
                     proc[id].setRemainingCPU(proc[id].getRemainingCPU() - cpuburst);
+                    proc[id].setPrevStateTime(cpuburst);
+                    proc[id].setDynPrio(proc[id].getPriority());
                     nextAvailable = cpucycles + cpuburst;
                                        
                 }
@@ -149,17 +231,21 @@ void simulate() {
                     printstatus(curEvent, proc[id]);
                     Event e(cpucycles + proc[id].getRemainingCPU(), id, 5);
                     processor.putEvent(e);
+                    proc[id].setRemainingBurst(0);
                     nextAvailable = cpucycles + proc[id].getRemainingCPU();
+                    proc[id].setPrevStateTime(proc[id].getRemainingCPU());
                     proc[id].setRemainingCPU(0);
-                }  
+                }
                 else {
                     // Going into IO blocked mode
                     // Generate CPU burst from the random file
                     printstatus(curEvent, proc[id]);
-                    Process p = scheduler->get_next_process();
                     Event e(cpucycles + cpuburst, id, 2);
                     processor.putEvent(e);
+                    proc[id].setRemainingBurst(0);
                     proc[id].setRemainingCPU(proc[id].getRemainingCPU() - cpuburst);
+                    proc[id].setPrevStateTime(cpuburst);
+                    proc[id].setDynPrio(proc[id].getPriority());
                     nextAvailable = cpucycles + cpuburst;
                 }
             }
@@ -169,10 +255,12 @@ void simulate() {
 
             // Generate IO Burst from the random file
             ioburst = 1 + getRandomNumber() % proc[id].getMaxIOBurstTime();
+            proc[id].setIOBurst(ioburst);
             printstatus(curEvent, proc[id]);
 
             Event e(cpucycles + ioburst, id, 3);
             proc[id].setIOTime(proc[id].getIOTime() + ioburst);
+            proc[id].setPrevStateTime(ioburst);
             processor.putEvent(e);
 
         }
@@ -180,19 +268,26 @@ void simulate() {
         else if(curEvent.transition == 3) {
             printstatus(curEvent, proc[id]);
             Event e(cpucycles, id, 1);
+            e.inReady = cpucycles; // To calculate CPU Wait Time
             processor.putEvent(e);
+            proc[id].setPrevStateTime(0);
+            proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             scheduler->add_process(proc[id]);
         }
         // Running -> Ready (Pre-emption) ##TODO
         else if(curEvent.transition == 4) {
             printstatus(curEvent, proc[id]);
             Event e(cpucycles, id, 1);
+            e.inReady = cpucycles;
             processor.putEvent(e);
+            proc[id].setPrevStateTime(0);
+            //proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             scheduler->add_process(proc[id]);
         }
         //done
         else if(curEvent.transition == 5) {
             printstatus(curEvent, proc[id]);
+            proc[id].setPrevStateTime(0);
             proc[id].setFinishingTime(cpucycles);
         }
 
@@ -207,10 +302,25 @@ int main(int argc, char *argv[]) {
     while ((c = getopt (argc, argv, "s:")) != -1) {
             if(c == 's') {
                 if(optarg[0] == 'F') s = 0;
-
+                if(optarg[0] == 'L') s = 1;
+                if(optarg[0] == 'S') s = 2;
+                if(optarg[0] == 'R') s = 3;
                 switch(s) {
                     case 0:
-                        scheduler = new FCFSScheduler(0);
+                        scheduler = new FCFSScheduler(s);
+                        scheduler->setQuantum(9999);
+                        break;
+                    case 1: 
+                        scheduler = new LCFSScheduler(s);
+                        scheduler->setQuantum(9999);
+                        break;
+                    case 2:
+                        scheduler = new SJFScheduler(s);
+                        scheduler->setQuantum(9999);
+                        break;
+                    case 3:
+                        scheduler = new RRScheduler(s);
+                        scheduler->setQuantum(2);
                         break;
                     default:
                         abort();    
@@ -230,12 +340,14 @@ int main(int argc, char *argv[]) {
 
     //scheduler = new FCFSScheduler(0);
 
-    for (int i = 0; i < proc.size(); ++i) {
+    for (unsigned int i = 0; i < proc.size(); ++i) {
         processor.putEvent(Event(proc[i].getArrivalTime(), proc[i].getPid(), 0));
     }
 
     simulate();
 
+    printsummary();
+    printfinalsummary();
 
     fclose(rFile);
     fclose(pFile);

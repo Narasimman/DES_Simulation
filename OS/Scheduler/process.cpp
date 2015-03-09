@@ -13,7 +13,7 @@ Process::Process(int id, int a, int t, int c, int i) {
     maxCPUBurstTime = c;
     maxIOBurstTime = i;
 
-    state = finishingTime = turnaroundTime = iOTime = cpuWaitingTime = 0;
+    state = finishingTime = remainingBurst = remainingIO = prevStateTime = turnaroundTime = iOTime = cpuWaitingTime = 0;
 }
 
 int Process::getPid() {
@@ -53,6 +53,12 @@ int Process::getPriority() {
 void Process::setPriority(int p) {
     priority = p;
 }
+int Process::getDynPrio(){
+    return dynPrio;
+}
+void Process::setDynPrio(int p) {
+    dynPrio = p;
+}
 int Process::getState() {
     return state;
 }
@@ -65,11 +71,23 @@ int Process::getRemainingCPU() {
 void Process::setRemainingCPU(int t) {
     remainingCPU = t;
 }
-int Process::getRemainingIO() {
+int Process::getIOBurst() {
     return remainingIO;
 }
-void Process::setRemainingIO(int t) {
+void Process::setIOBurst(int t) {
     remainingIO = t;
+}
+int Process::getRemainingBurst() {
+    return remainingBurst;
+}
+void Process::setRemainingBurst(int b) {
+    remainingBurst = b;    
+}
+int Process::getPrevStateTime() {
+    return prevStateTime;
+}
+void Process::setPrevStateTime(int t) {
+    prevStateTime = t;
 }
 int Process::getFinishingTime() {
     return finishingTime;
@@ -78,6 +96,7 @@ void Process::setFinishingTime(int t) {
     finishingTime = t;
 }
 int Process::getTurnaroundTime() {
+    turnaroundTime = finishingTime - arrivalTime;
     return turnaroundTime;
 }
 void Process::setTurnaroundTime(int t) {

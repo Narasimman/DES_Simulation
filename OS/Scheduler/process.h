@@ -14,6 +14,7 @@ class Process {
         int maxCPUBurstTime;
         int maxIOBurstTime;
 		int priority;
+        int dynPrio;
 
 		// Process State
 		int state;
@@ -21,6 +22,10 @@ class Process {
         int remainingCPU;
         // remainig IO time
         int remainingIO;
+        // remaining cpu burst in case of pre emption
+        int remainingBurst;
+        // time of the previous state
+        int prevStateTime;
 
 		//Output parameters
 		int finishingTime;
@@ -47,13 +52,19 @@ class Process {
         void setMaxIOBurstTime(int);
         int getPriority();
         void setPriority(int);
+        int getDynPrio();
+        void setDynPrio(int);
 
         int getState();
         void setState(int);
         int getRemainingCPU();
         void setRemainingCPU(int);
-        int getRemainingIO();
-        void setRemainingIO(int);
+        int getIOBurst();
+        void setIOBurst(int);
+        int getRemainingBurst();
+        void setRemainingBurst(int);
+        int getPrevStateTime();
+        void setPrevStateTime(int);
 
         int getFinishingTime();
         void setFinishingTime(int);
