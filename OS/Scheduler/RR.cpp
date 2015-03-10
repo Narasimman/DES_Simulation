@@ -5,7 +5,8 @@ using namespace std;
 
 RRScheduler::RRScheduler() {}
 RRScheduler::RRScheduler(int t) {
-    type = t;
+    type = 3;
+    quantum = t;
 }
 
 Process RRScheduler::get_next_process() {

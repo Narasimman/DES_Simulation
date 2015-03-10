@@ -43,14 +43,14 @@ const string states[6] = {
     "Done"
 };
 
-// structure to record the time segment of IO waiting
-// // used for calculation IO utilization
+// structure to record the time segment of IO waitig 
 typedef struct IOWAIT {
    int beg;
    int end;
 } IOWait;
 std::vector<IOWait>  ioWait;
-// an ad hoc comparing function for IOWait
+
+
 bool cmp(IOWait a, IOWait b) {
    return a.beg == b.beg ? a.end < b.end : a.beg < b.beg;
 }
@@ -316,6 +316,7 @@ void simulate() {
             e.inReady = cpucycles;
             processor.putEvent(e);
             proc[id].setLastReady(curEvent.timestamp);
+            // Dynamic priority is reset in add_process except PRIO
             if(proc[id].getDynPrio() > 0)
                proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             else
@@ -336,39 +337,29 @@ int main(int argc, char *argv[]) {
     pFile = fopen(argv[1], "r");
     rFile = fopen(argv[2], "r");
     
-    int c, s = -1, quantum;
+    int c, quantum;
     while ((c = getopt (argc, argv, "vs:")) != -1) {
             if(c == 's') {
-                if(optarg[0] == 'F') s = 0;
-                if(optarg[0] == 'L') s = 1;
-                if(optarg[0] == 'S') s = 2;
-                if(optarg[0] == 'R') s = 3;
-                if(optarg[0] == 'P') s = 4;
-                if(s > 2) {
+                if(optarg[0] == 'R' || optarg[0] == 'P') {
                     sscanf(optarg + 1, "%d", &quantum);
                 } else {
                     quantum = 9999;    
                 }
-                switch(s) {
-                    case 0:
-                        scheduler = new FCFSScheduler(s);
-                        scheduler->setQuantum(quantum);
+                switch(optarg[0]) {
+                    case 'F':
+                        scheduler = new FCFSScheduler(quantum);
                         break;
-                    case 1: 
-                        scheduler = new LCFSScheduler(s);
-                        scheduler->setQuantum(quantum);
+                    case 'L': 
+                        scheduler = new LCFSScheduler(quantum);
                         break;
-                    case 2:
-                        scheduler = new SJFScheduler(s);
-                        scheduler->setQuantum(quantum);
+                    case 'S':
+                        scheduler = new SJFScheduler(quantum);
                         break;
-                    case 3:
-                        scheduler = new RRScheduler(s);
-                        scheduler->setQuantum(quantum);
+                    case 'R':
+                        scheduler = new RRScheduler(quantum);
                         break;
-                    case 4:
-                        scheduler = new PRIOScheduler(s);
-                        scheduler->setQuantum(quantum);
+                    case 'P':
+                        scheduler = new PRIOScheduler(quantum);
                         break;
                     default:
                         abort();    
@@ -378,13 +369,14 @@ int main(int argc, char *argv[]) {
             }       
     }
 
-    if(verbose) {
-         pFile = fopen(argv[3], "r");
-         rFile = fopen(argv[4], "r");
-    } else {
-        pFile = fopen(argv[2], "r");
-        rFile = fopen(argv[3], "r");    
+    if(argc - optind != 2){
+        cout << "inputfile and randfile are required.\nInput the required inputs in the format specified. [-v] [-s<schedspec>] inputfile randfile\n";
+        exit(99);
     }
+
+    pFile = fopen(argv[optind], "r");
+    rFile = fopen(argv[optind + 1], "r");
+    
     char buf[80];
     fgets(buf, 80, rFile);
 

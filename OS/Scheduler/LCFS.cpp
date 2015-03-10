@@ -5,7 +5,8 @@ using namespace std;
 
 LCFSScheduler::LCFSScheduler() {}
 LCFSScheduler::LCFSScheduler(int t) {
-    type = t;
+    type = 1;
+    quantum = t;
 }
 
 Process LCFSScheduler::get_next_process() {

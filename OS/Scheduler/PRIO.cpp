@@ -5,7 +5,10 @@ using namespace std;
 
 PRIOScheduler::PRIOScheduler() {}
 PRIOScheduler::PRIOScheduler(int t) {
-    type = t;
+    type = 4;
+    quantum = t;
+    activeQueue = new vector<Process>[4];
+    expiredQueue = new vector<Process>[4];
 }
 
 Process PRIOScheduler::get_next_process() {
@@ -15,7 +18,9 @@ Process PRIOScheduler::get_next_process() {
         if(activeQueue[i].size() > 0) { empty  = false; break; }
     }
     if(empty) {
-        swap(activeQueue, expiredQueue);
+        vector<Process> *temp = activeQueue;
+        activeQueue = expiredQueue;
+        expiredQueue = temp;
     }
     for(int i = 3; i > -1; i--) {
         if(activeQueue[i].size() > 0) {
@@ -25,12 +30,6 @@ Process PRIOScheduler::get_next_process() {
         }
     }
     return p;
-}
-
-void swap(vector<Process> &a, vector<Process> &e){
-    vector<Process> temp = a;
-    a = e;
-    e = temp;
 }
 
 void PRIOScheduler::add_process(Process &p) {

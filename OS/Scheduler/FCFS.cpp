@@ -5,7 +5,8 @@ using namespace std;
 
 FCFSScheduler::FCFSScheduler() {}
 FCFSScheduler::FCFSScheduler(int t) {
-    type = t;
+    type = 0;
+    quantum = t;
 }
 
 Process FCFSScheduler::get_next_process() {

@@ -1,0 +1,13 @@
+To Compile
+
+Just run "make"
+
+The are four different classes
+1. Process - holds information about a process
+2. Event - holds information about an Event
+3. processor - holds information about the DES (getEvent and putEvent)
+4. main - handles the event transition.
+
+The scheduler.cpp is the abstract class that is implemented by the individual schedulers.
+
+"make clean" to remove *.o

@@ -7,9 +7,8 @@ using namespace std;
 
 class PRIOScheduler : public Scheduler {
     private:
-        vector<Process> activeQueue[4];
-        vector<Process> expiredQueue[4];
-        void swap(vector<Process>, vector<Process>);
+        vector<Process> *activeQueue;
+        vector<Process> *expiredQueue;
     public:
         PRIOScheduler();
         PRIOScheduler(int);

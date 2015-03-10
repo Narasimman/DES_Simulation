@@ -5,7 +5,8 @@ using namespace std;
 
 SJFScheduler::SJFScheduler() {}
 SJFScheduler::SJFScheduler(int t) {
-    type = t;
+    type = 2;
+    quantum = t;
 }
 
 Process SJFScheduler::get_next_process() {
