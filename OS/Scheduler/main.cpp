@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <iomanip>
 #include <algorithm>
+
 #include "process.h"
 #include "event.h"
 #include "scheduler.h"
@@ -293,7 +294,6 @@ void simulate() {
             io.beg = cpucycles;
             io.end = cpucycles + ioburst;
             ioWait.push_back(io);
-            //cout << ",,,," << id << " " << ioburst << endl; 
             proc[id].setPrevStateTime(ioburst);
             proc[id].setDynPrio(proc[id].getPriority());
             processor.putEvent(e);
