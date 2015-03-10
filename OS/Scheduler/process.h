@@ -25,6 +25,7 @@ class Process {
         // remaining cpu burst in case of pre emption
         int remainingBurst;
         // time of the previous state
+        int lastReady;
         int prevStateTime;
 
 		//Output parameters
@@ -65,6 +66,8 @@ class Process {
         void setRemainingBurst(int);
         int getPrevStateTime();
         void setPrevStateTime(int);
+        int getLastReady();
+        void setLastReady(int);
 
         int getFinishingTime();
         void setFinishingTime(int);

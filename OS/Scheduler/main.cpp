@@ -31,6 +31,7 @@ Scheduler* scheduler;
 
 vector<Process> proc;
 int cpucycles;
+bool verbose = false;
 const string states[6] = {
     "CREATED -> READY",
     "READY -> RUNNG",
@@ -97,6 +98,7 @@ void printfinalsummary() {
 void printstatus(Event e, Process p) {
 //        printf("%d %d : %s %d %d\n", cpucycles, p.getPid(),
   //                  states[e.transition].c_str(), p.getRemainingCPU(), p.getPriority());
+    if(verbose) {
         cout << cpucycles << " " << p.getPid() << " " << p.getPrevStateTime() << ": " << states[e.transition].c_str();
         if(e.transition == 4) cout << " ";
         if(e.transition == 1 || e.transition == 4) cout << " cb=" << p.getRemainingBurst();
@@ -104,6 +106,7 @@ void printstatus(Event e, Process p) {
         if(e.transition == 1 || e.transition == 2 || e.transition == 4) cout << " rem=" << p.getRemainingCPU();
         if(e.transition == 1 || e.transition == 4 ) cout << " prio=" << p.getDynPrio();
         cout << endl;
+    }
 }
 
 int getRandomNumber() {
@@ -161,6 +164,7 @@ void simulate() {
 
         id = curEvent.pid;
         cpucycles = cpucycles > curEvent.timestamp ? cpucycles : curEvent.timestamp;
+        //cout << "@@ " << id << " " << proc[id].getPrevStateTime() <<  endl;
 
         // Created -> Ready : So, it is ready for running
         if(curEvent.transition == 0) {
@@ -169,20 +173,30 @@ void simulate() {
             e.inReady = cpucycles;
             processor.putEvent(e);
             proc[id].setDynPrio(proc[id].getDynPrio() - 1);
+            proc[id].setLastReady(curEvent.timestamp);
             scheduler->add_process(proc[id]);
         }
         // Ready -> Running
         else if(curEvent.transition == 1) {
+            //cout << "......" << id << " " << curEvent.timestamp << endl;
+
             //This is to update the time stamp to the next available slot in the CPU
             //cout << curEvent.timestamp << " " << nextAvailable << endl;
             if (curEvent.timestamp < nextAvailable) {
+                //cout << "->" << id << " " << nextAvailable << " " << curEvent.timestamp << "  " <<proc[id].getPrevStateTime()   << endl;
+                //proc[id].setPrevStateTime(nextAvailable - curEvent.timestamp);
+                if(proc[id].getLastReady() < 0 ) {
+                    proc[id].setLastReady(curEvent.timestamp);
+                }
                 curEvent.timestamp = nextAvailable;
-                processor.putEvent(curEvent);
+                processor.putEvent(curEvent);                
                 continue;
             }
 
             Process pr = scheduler->get_next_process();
             id = pr.getPid();
+            proc[id].setPrevStateTime(curEvent.timestamp - proc[id].getLastReady());
+          //  cout << " ++ " << id << " " << proc[id].getPrevStateTime();
 
             // First calculate the CPU Wait time
             proc[id].setCpuWaitingTime(proc[id].getCpuWaitingTime() + cpucycles - curEvent.inReady);
@@ -213,7 +227,7 @@ void simulate() {
                     // Going into IO blocked mode
                     // Generate CPU burst from the random file
                     printstatus(curEvent, proc[id]);
-                    Event e(cpucycles + cpuburst, id, 2);
+                    Event e(cpucycles + cpuburst, id, (cpuburst == proc[id].getRemainingCPU())?5:2);
                     processor.putEvent(e);
                     proc[id].setRemainingBurst(0);
                     proc[id].setRemainingCPU(proc[id].getRemainingCPU() - cpuburst);
@@ -249,6 +263,7 @@ void simulate() {
                     nextAvailable = cpucycles + cpuburst;
                 }
             }
+            proc[id].setLastReady(-1);
         }
         // Running -> Blocked
         else if(curEvent.transition == 2) {
@@ -260,17 +275,19 @@ void simulate() {
 
             Event e(cpucycles + ioburst, id, 3);
             proc[id].setIOTime(proc[id].getIOTime() + ioburst);
+            //cout << ",,,," << id << " " << ioburst << endl; 
             proc[id].setPrevStateTime(ioburst);
             processor.putEvent(e);
 
         }
         // Blocked -> Ready
         else if(curEvent.transition == 3) {
+           // cout << ">> " << id << " " << proc[id].getPrevStateTime();
             printstatus(curEvent, proc[id]);
             Event e(cpucycles, id, 1);
             e.inReady = cpucycles; // To calculate CPU Wait Time
             processor.putEvent(e);
-            proc[id].setPrevStateTime(0);
+            proc[id].setLastReady(curEvent.timestamp);
             proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             scheduler->add_process(proc[id]);
         }
@@ -280,7 +297,7 @@ void simulate() {
             Event e(cpucycles, id, 1);
             e.inReady = cpucycles;
             processor.putEvent(e);
-            proc[id].setPrevStateTime(0);
+            proc[id].setLastReady(curEvent.timestamp);
             //proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             scheduler->add_process(proc[id]);
         }
@@ -298,40 +315,50 @@ int main(int argc, char *argv[]) {
     pFile = fopen(argv[1], "r");
     rFile = fopen(argv[2], "r");
     
-    int c, s = -1;
-    while ((c = getopt (argc, argv, "s:")) != -1) {
+    int c, s = -1, quantum;
+    while ((c = getopt (argc, argv, "vs:")) != -1) {
             if(c == 's') {
                 if(optarg[0] == 'F') s = 0;
                 if(optarg[0] == 'L') s = 1;
                 if(optarg[0] == 'S') s = 2;
                 if(optarg[0] == 'R') s = 3;
+                if(s > 2) {
+                    sscanf(optarg + 1, "%d", &quantum);
+                } else {
+                    quantum = 9999;    
+                }
                 switch(s) {
                     case 0:
                         scheduler = new FCFSScheduler(s);
-                        scheduler->setQuantum(9999);
+                        scheduler->setQuantum(quantum);
                         break;
                     case 1: 
                         scheduler = new LCFSScheduler(s);
-                        scheduler->setQuantum(9999);
+                        scheduler->setQuantum(quantum);
                         break;
                     case 2:
                         scheduler = new SJFScheduler(s);
-                        scheduler->setQuantum(9999);
+                        scheduler->setQuantum(quantum);
                         break;
                     case 3:
                         scheduler = new RRScheduler(s);
-                        scheduler->setQuantum(2);
+                        scheduler->setQuantum(quantum);
                         break;
                     default:
                         abort();    
-                }   
-                
-            }
-        
-        
+                }                
+            } else if(c == 'v') {
+                verbose = true;    
+            }       
     }
 
-
+    if(verbose) {
+         pFile = fopen(argv[3], "r");
+         rFile = fopen(argv[4], "r");
+    } else {
+        pFile = fopen(argv[2], "r");
+        rFile = fopen(argv[3], "r");    
+    }
     // TODO
     char buf[80];
     fgets(buf, 80, rFile);

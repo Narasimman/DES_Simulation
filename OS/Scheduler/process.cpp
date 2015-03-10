@@ -89,6 +89,12 @@ int Process::getPrevStateTime() {
 void Process::setPrevStateTime(int t) {
     prevStateTime = t;
 }
+int Process::getLastReady() {
+    return lastReady;
+}
+void Process::setLastReady(int t) {
+    lastReady = t;
+}
 int Process::getFinishingTime() {
     return finishingTime;
 }
