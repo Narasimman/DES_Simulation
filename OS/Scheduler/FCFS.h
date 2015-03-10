@@ -11,7 +11,7 @@ class FCFSScheduler : public Scheduler {
         FCFSScheduler(int);
 
         Process get_next_process();
-        void add_process(Process);
+        void add_process(Process&);
 };
 
 

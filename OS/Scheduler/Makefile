@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall
 LFLAGS=
-OBJS=main.o process.o processor.o scheduler.o event.o FCFS.o LCFS.o SJF.o RR.o
+OBJS=main.o process.o processor.o scheduler.o event.o FCFS.o LCFS.o SJF.o RR.o PRIO.o
 
 sched: $(OBJS)
 	$(CC) $(LFLAGS) $(OBJS) -o sched
@@ -26,6 +26,9 @@ SJF.o: SJF.cpp SJF.h
 
 RR.o: RR.cpp RR.h
 	$(CC) $(CFLAGS) RR.cpp
+
+PRIO.o: PRIO.cpp PRIO.h
+	$(CC) $(CFLAGS) PRIO.cpp
 
 scheduler.o: scheduler.cpp scheduler.h
 	$(CC) $(CFLAGS) scheduler.cpp

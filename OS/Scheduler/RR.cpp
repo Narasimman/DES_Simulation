@@ -17,7 +17,8 @@ Process RRScheduler::get_next_process() {
     return p;
 }
 
-void RRScheduler::add_process(Process p) {
+void RRScheduler::add_process(Process &p) {
+    p.setDynPrio(p.getPriority() - 1);
     readyQueue.push_back(p);
 }
 

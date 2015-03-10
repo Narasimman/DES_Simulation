@@ -9,7 +9,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <iomanip>
-
+#include <algorithm>
 #include "process.h"
 #include "event.h"
 #include "scheduler.h"
@@ -18,6 +18,7 @@
 #include "LCFS.h"
 #include "RR.h"
 #include "SJF.h"
+#include "PRIO.h"
 
 using namespace std;
 
@@ -41,6 +42,18 @@ const string states[6] = {
     "Done"
 };
 
+// structure to record the time segment of IO waiting
+// // used for calculation IO utilization
+typedef struct IOWAIT {
+   int beg;
+   int end;
+} IOWait;
+std::vector<IOWait>  ioWait;
+// an ad hoc comparing function for IOWait
+bool cmp(IOWait a, IOWait b) {
+   return a.beg == b.beg ? a.end < b.end : a.beg < b.beg;
+}
+
 void printsummary() {
     cout << scheduler->getType();
 
@@ -48,7 +61,7 @@ void printsummary() {
         cout << " " << scheduler->getQuantum();
     }
     cout << endl;
-    
+
     for(unsigned int i = 0; i < proc.size(); i++) {
         cout << setfill('0') << setw(4) << i << ": "; // Counter
         cout << setfill(' ') << setw(4) << proc[i].getArrivalTime();
@@ -73,9 +86,21 @@ void printfinalsummary() {
     double avg_turnaround = 0.0;
     double avg_waittime = 0.0;
 
+    std::sort(ioWait.begin(), ioWait.end(), cmp);
+    int end;
+    for (unsigned int i = 0; i < ioWait.size(); ++i) {
+        if (i == 0 || end <= ioWait[i].beg) {
+            io_util += ioWait[i].end - ioWait[i].beg;
+            end = ioWait[i].end;
+        } else if (end < ioWait[i].end) {
+            io_util += ioWait[i].end - end;
+            end = ioWait[i].end;
+        }
+    }
+
+
     for(unsigned int i = 0;i < proc.size(); i++) {
         cpu_util += proc[i].getTotalCPUTime();
-        io_util += proc[i].getIOTime();
         avg_turnaround += proc[i].getTurnaroundTime();
         avg_waittime += proc[i].getCpuWaitingTime();       
     }
@@ -96,8 +121,6 @@ void printfinalsummary() {
 }
 
 void printstatus(Event e, Process p) {
-//        printf("%d %d : %s %d %d\n", cpucycles, p.getPid(),
-  //                  states[e.transition].c_str(), p.getRemainingCPU(), p.getPriority());
     if(verbose) {
         cout << cpucycles << " " << p.getPid() << " " << p.getPrevStateTime() << ": " << states[e.transition].c_str();
         if(e.transition == 4) cout << " ";
@@ -135,7 +158,6 @@ vector<Process> getProcesses() {
         int a, t, c, i;
         sscanf(buf, "%d%d%d%d", &a, &t, &c, &i);
         pr = Process(id++, a, t, c, i);
-        // CHECK PRIO CLACULATION
         prio = 1 + (getRandomNumber() % 4);
         pr.setPriority(prio);
         pr.setDynPrio(prio);
@@ -155,7 +177,7 @@ void simulate() {
     int nextAvailable = 0;
     cpucycles = 0;
     int rand;
-    int quantum = scheduler->getQuantum(); //#TODO
+    int quantum = scheduler->getQuantum(); 
     while(!processor.queueEmpty()) {
 
         curEvent = processor.getEvent();
@@ -164,7 +186,6 @@ void simulate() {
 
         id = curEvent.pid;
         cpucycles = cpucycles > curEvent.timestamp ? cpucycles : curEvent.timestamp;
-        //cout << "@@ " << id << " " << proc[id].getPrevStateTime() <<  endl;
 
         // Created -> Ready : So, it is ready for running
         if(curEvent.transition == 0) {
@@ -178,13 +199,9 @@ void simulate() {
         }
         // Ready -> Running
         else if(curEvent.transition == 1) {
-            //cout << "......" << id << " " << curEvent.timestamp << endl;
 
             //This is to update the time stamp to the next available slot in the CPU
-            //cout << curEvent.timestamp << " " << nextAvailable << endl;
             if (curEvent.timestamp < nextAvailable) {
-                //cout << "->" << id << " " << nextAvailable << " " << curEvent.timestamp << "  " <<proc[id].getPrevStateTime()   << endl;
-                //proc[id].setPrevStateTime(nextAvailable - curEvent.timestamp);
                 if(proc[id].getLastReady() < 0 ) {
                     proc[id].setLastReady(curEvent.timestamp);
                 }
@@ -192,15 +209,13 @@ void simulate() {
                 processor.putEvent(curEvent);                
                 continue;
             }
-
             Process pr = scheduler->get_next_process();
             id = pr.getPid();
             proc[id].setPrevStateTime(curEvent.timestamp - proc[id].getLastReady());
-          //  cout << " ++ " << id << " " << proc[id].getPrevStateTime();
 
             // First calculate the CPU Wait time
-            proc[id].setCpuWaitingTime(proc[id].getCpuWaitingTime() + cpucycles - curEvent.inReady);
-            // TODO GET random number only when remaining cpu is zero
+            proc[id].setCpuWaitingTime(proc[id].getCpuWaitingTime() + (curEvent.timestamp - proc[id].getLastReady()));
+            //  GET random number only when remaining cpu is zero
             if(proc[id].getRemainingBurst() == 0) {
                 rand = 1 + (getRandomNumber() % proc[id].getMaxCPUBurstTime());
                 if(rand > proc[id].getRemainingCPU()) {
@@ -208,7 +223,6 @@ void simulate() {
                 } else {
                     proc[id].setRemainingBurst(rand);
                 }
-                //cout << proc[id].getRemainingCPU() << " " << cpuburst << " ** " << endl;
             }
             cpuburst = proc[id].getRemainingBurst();
             // Quantum is lesser than remaining CPU Butst(RR)
@@ -275,14 +289,18 @@ void simulate() {
 
             Event e(cpucycles + ioburst, id, 3);
             proc[id].setIOTime(proc[id].getIOTime() + ioburst);
+            IOWait io;
+            io.beg = cpucycles;
+            io.end = cpucycles + ioburst;
+            ioWait.push_back(io);
             //cout << ",,,," << id << " " << ioburst << endl; 
             proc[id].setPrevStateTime(ioburst);
+            proc[id].setDynPrio(proc[id].getPriority());
             processor.putEvent(e);
 
         }
         // Blocked -> Ready
         else if(curEvent.transition == 3) {
-           // cout << ">> " << id << " " << proc[id].getPrevStateTime();
             printstatus(curEvent, proc[id]);
             Event e(cpucycles, id, 1);
             e.inReady = cpucycles; // To calculate CPU Wait Time
@@ -298,7 +316,10 @@ void simulate() {
             e.inReady = cpucycles;
             processor.putEvent(e);
             proc[id].setLastReady(curEvent.timestamp);
-            //proc[id].setDynPrio(proc[id].getDynPrio() - 1);
+            if(proc[id].getDynPrio() > 0)
+               proc[id].setDynPrio(proc[id].getDynPrio() - 1);
+            else
+               proc[id].setDynPrio(proc[id].getPriority() - 1);
             scheduler->add_process(proc[id]);
         }
         //done
@@ -322,6 +343,7 @@ int main(int argc, char *argv[]) {
                 if(optarg[0] == 'L') s = 1;
                 if(optarg[0] == 'S') s = 2;
                 if(optarg[0] == 'R') s = 3;
+                if(optarg[0] == 'P') s = 4;
                 if(s > 2) {
                     sscanf(optarg + 1, "%d", &quantum);
                 } else {
@@ -344,6 +366,10 @@ int main(int argc, char *argv[]) {
                         scheduler = new RRScheduler(s);
                         scheduler->setQuantum(quantum);
                         break;
+                    case 4:
+                        scheduler = new PRIOScheduler(s);
+                        scheduler->setQuantum(quantum);
+                        break;
                     default:
                         abort();    
                 }                
@@ -359,13 +385,10 @@ int main(int argc, char *argv[]) {
         pFile = fopen(argv[2], "r");
         rFile = fopen(argv[3], "r");    
     }
-    // TODO
     char buf[80];
     fgets(buf, 80, rFile);
 
     proc = getProcesses();
-
-    //scheduler = new FCFSScheduler(0);
 
     for (unsigned int i = 0; i < proc.size(); ++i) {
         processor.putEvent(Event(proc[i].getArrivalTime(), proc[i].getPid(), 0));

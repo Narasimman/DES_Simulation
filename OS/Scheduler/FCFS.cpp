@@ -17,7 +17,8 @@ Process FCFSScheduler::get_next_process() {
     return p;
 }
 
-void FCFSScheduler::add_process(Process p) {
+void FCFSScheduler::add_process(Process &p) {
+    p.setDynPrio(p.getPriority() - 1);
     readyQueue.push_back(p);
 }
 

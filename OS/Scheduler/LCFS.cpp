@@ -17,7 +17,8 @@ Process LCFSScheduler::get_next_process() {
     return p;
 }
 
-void LCFSScheduler::add_process(Process p) {
+void LCFSScheduler::add_process(Process &p) {
+    p.setDynPrio(p.getPriority() - 1);
     readyQueue.push_back(p);
 }
 

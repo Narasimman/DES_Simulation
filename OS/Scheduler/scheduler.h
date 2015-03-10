@@ -16,6 +16,8 @@ class Scheduler {
         //Quantum
         int quantum;
 
+        //vector<Process> activeQueue[4];
+        //vector<Process> expiredQueue[4];
  
     public:
 
@@ -33,7 +35,7 @@ class Scheduler {
         virtual Process get_next_process() = 0;
 
         // Adds the given process to the ready queue based on the scheduler type.
-        virtual void add_process(Process) = 0;
+        virtual void add_process(Process&) = 0;
 
 };
 

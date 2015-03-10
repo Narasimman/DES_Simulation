@@ -26,7 +26,8 @@ Process SJFScheduler::get_next_process() {
     return p;
 }
 
-void SJFScheduler::add_process(Process p) {
+void SJFScheduler::add_process(Process &p) {
+    p.setDynPrio(p.getPriority() - 1);
     readyQueue.push_back(p);
 }
 
