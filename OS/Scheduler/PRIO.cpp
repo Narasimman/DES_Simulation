@@ -34,7 +34,8 @@ Process PRIOScheduler::get_next_process() {
 
 void PRIOScheduler::add_process(Process &p) {
     if(p.getDynPrio() == -1) {
-        expiredQueue[p.getPriority()].push_back(p);
+        p.setDynPrio(p.getPriority() - 1);
+        expiredQueue[p.getDynPrio()].push_back(p);
     } else {
         activeQueue[p.getDynPrio()].push_back(p);
     }

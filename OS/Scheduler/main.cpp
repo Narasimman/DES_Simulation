@@ -317,10 +317,7 @@ void simulate() {
             processor.putEvent(e);
             proc[id].setLastReady(curEvent.timestamp);
             // Dynamic priority is reset in add_process except PRIO
-            if(proc[id].getDynPrio() > 0)
-               proc[id].setDynPrio(proc[id].getDynPrio() - 1);
-            else
-               proc[id].setDynPrio(proc[id].getPriority() - 1);
+            proc[id].setDynPrio(proc[id].getDynPrio() - 1);
             scheduler->add_process(proc[id]);
         }
         //done
