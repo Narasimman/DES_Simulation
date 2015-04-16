@@ -7,7 +7,7 @@ class FIFO : public PR_Algorithm {
 	public:
 		FIFO();
 	
-		int getFrame(vector<PTE>&, vector<unsigned int>&, vector<FrameTable>&);
+		int getFrame(vector<PTE>&, vector<unsigned int>&, vector<unsigned int>&);
 
 };
 

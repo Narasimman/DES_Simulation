@@ -6,28 +6,20 @@
 #include <string>
 #include <cstring>
 
+#include "PTE.h"
+#include "bit_operations.h"
+
 using namespace std;
-
-struct PTE {
-	unsigned int present : 1;
-	unsigned int referenced : 1;
-	unsigned int modified : 1;
-	unsigned int pagedout :1;
-	unsigned int framenumber : 24;
-};
-
-struct FrameTable {
-	PTE pte;
-};
 
 class VMM {
 	private:
 		int num_frames;
 		bool O,P,F,S;
+		BitOP *bitop;
 		
 		vector<unsigned int> frames;
 		vector<PTE> pages;
-		vector<FrameTable> ftop; 
+		vector<unsigned int> ftop; 
 		
 	public:
 		VMM();

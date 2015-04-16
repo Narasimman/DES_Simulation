@@ -9,7 +9,7 @@
 #include <iomanip>
 
 #include "memory_manager.h"
-#include "PR_algorithm_base.h"
+#include "bit_operations.h"
 #include "FIFO.h"
 
 using namespace std;
@@ -71,6 +71,7 @@ int main(int argc, char *argv[]) {
 
     instFile = fopen(argv[optind], "r");
     rFile = fopen(argv[optind + 1], "r");
+	
 
 	/* Read instruction set one line at a time */
 	while(!feof(instFile)) {

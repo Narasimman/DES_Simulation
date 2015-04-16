@@ -5,6 +5,6 @@
 using namespace std;
 FIFO::FIFO() {}
 
-int FIFO::getFrame(vector<PTE> &pte, vector<unsigned int> &frame, vector<FrameTable> &frametable) {
+int FIFO::getFrame(vector<PTE> &pte, vector<unsigned int> &frame, vector<unsigned int> &ftop) {
 		return -1;
 }

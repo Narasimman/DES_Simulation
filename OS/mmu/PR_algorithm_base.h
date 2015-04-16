@@ -9,7 +9,7 @@ using namespace std;
 
 class PR_Algorithm {
 	public:
-		virtual int getFrame(vector<PTE>&, vector<unsigned int>&, vector<FrameTable>&) = 0;
+		virtual int getFrame(vector<PTE>&, vector<unsigned int>&, vector<unsigned int>&) = 0;
 };
 
 #endif
