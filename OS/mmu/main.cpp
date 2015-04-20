@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     }
 	
 	/* Initialize VMM*/
-	VMM *vmm = new VMM(num_frames);
+	VMM *vmm = new VMM(num_frames, pr_algo);
 	vmm->setOptions(options);
 
     if(argc - optind != 2){

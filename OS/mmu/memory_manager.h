@@ -8,14 +8,16 @@
 
 #include "PTE.h"
 #include "bit_operations.h"
+#include "PR_algorithm_base.h"
 
 using namespace std;
 
 class VMM {
 	private:
-		int num_frames;
+		int num_frames, counter;
 		bool O,P,F,S;
 		BitOP *bitop;
+		PR_Algorithm *pr_algo;
 		
 		vector<unsigned int> frames;
 		vector<PTE> pages;
@@ -23,7 +25,7 @@ class VMM {
 		
 	public:
 		VMM();
-		VMM(int);
+		VMM(int, PR_Algorithm*);
 		void setOptions(char*);
 		void mapPagesToFrames(int&, int&);
 };
