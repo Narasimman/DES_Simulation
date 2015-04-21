@@ -36,9 +36,9 @@ void MMU::setOptions(char* optarg) {
 
 void MMU::printOptions() {
 	if (P) {
-        for (int i = 0; i < pages.size(); i++) {
+        for (unsigned int i = 0; i < pages.size(); i++) {
             if (bitop->GET_PRESENT(pages[i]) == 1) {
-                cout << i << ": ";
+                cout << i << ":";
                 (bitop->GET_REFERENCED(pages[i]) == 1)? cout << "R" : cout << "-";
                 (bitop->GET_MODIFIED(pages[i]) == 1)? cout << "M" :  cout << "-";
                 (bitop->GET_PAGEDOUT(pages[i]) == 1)? cout << "S " : cout << "- ";
@@ -50,7 +50,7 @@ void MMU::printOptions() {
     }
 	
 	if (F) {
-        for (int i = 0; i < ftop.size(); i++) {
+        for (unsigned int i = 0; i < ftop.size(); i++) {
             (ftop[i] == -1)? cout << "* " : cout << ftop[i] << " ";            
         }
         cout << endl;
@@ -90,7 +90,7 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 			
 			if(O) {
 				cout << counter << ": ZERO " << setfill(' ') << setw(8) << framenumber << endl;
-				cout << counter << ": MAP  " << setfill(' ') << setw(4) << pageid << framenumber << endl;
+				cout << counter << ": MAP  " << setfill(' ') << setw(4) << pageid << setw(4) << framenumber << endl;
 			}
 			zero_counter++;
 			map_counter++;			
@@ -116,17 +116,18 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 				bitop->UNSET_MODIFIED(old_page);
 				
 				if(O) {
-					cout << counter << ": OUT  " << setfill(' ') << setw(4) << old_pageid << framenumber << endl;
+					cout << counter << ": OUT  " << setfill(' ') << setw(4) << old_pageid << setw(4) << framenumber << endl;
 				}
 				out_counter++;
 				
 			}
 	
 			ftop[framenumber] = pageid;
+			page.framenumber = framenumber;
 
 			if(bitop->GET_PAGEDOUT(page) == 1) {
 				if(O) {
-					cout << counter << ": IN   " << setfill(' ') << setw(4) << pageid << framenumber << endl;
+					cout << counter << ": IN   " << setfill(' ') << setw(4) << pageid << setw(4) << framenumber << endl;
 				}
 				in_counter++;
 			} else {

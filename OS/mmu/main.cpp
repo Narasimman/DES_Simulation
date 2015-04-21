@@ -12,6 +12,9 @@
 #include "bit_operations.h"
 #include "FIFO.h"
 #include "Random.h"
+#include "SecondChance.h"
+#include "ClockFrame.h"
+#include "ClockVirtual.h"
 #include "RandomNumber.h"
 
 using namespace std;
@@ -41,6 +44,16 @@ void getPRAlgorithm(int algo) {
 		case 'r':
 			pr_algo = new Random();
 			break;
+		case 's':
+			pr_algo = new SecondChance();
+			break;
+		case 'c':
+			pr_algo = new ClockFrame();
+			break;
+		case 'X':
+			pr_algo = new ClockVirtual();
+			break;
+		
 	}
 }
 

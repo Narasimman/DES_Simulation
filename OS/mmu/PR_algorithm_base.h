@@ -5,12 +5,14 @@
 
 #include "PTE.h"
 #include "RandomNumber.h"
+#include "bit_operations.h"
 
 using namespace std;
 
 class PR_Algorithm {
 	public:
 		RandomNumber rnd;
+		BitOP *bitop;
 		void initializeRandom(RandomNumber&);
 		virtual int getFrame(vector<PTE>&, vector<unsigned int>&, vector<unsigned int>&) = 0;
 };
