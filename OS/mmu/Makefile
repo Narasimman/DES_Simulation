@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall
 LFLAGS=
-OBJS=main.o memory_manager.o bit_operations.o PR_algorithm_base.o FIFO.o
+OBJS=main.o memory_manager.o bit_operations.o PR_algorithm_base.o RandomNumber.o FIFO.o Random.o
 
 mmu-executable: $(OBJS)
 	$(CC) $(LFLAGS) $(OBJS) -o mmu-executable
@@ -18,8 +18,14 @@ memory_manager.o: memory_manager.cpp memory_manager.h
 PR_algorithm_base.o: PR_algorithm_base.cpp PR_algorithm_base.h
 	$(CC) $(CFLAGS) PR_algorithm_base.cpp
 
+RandomNumber.o: RandomNumber.cpp RandomNumber.h
+	$(CC) $(CFLAGS) RandomNumber.cpp
+
 FIFO.o: FIFO.cpp FIFO.h
 	$(CC) $(CFLAGS) FIFO.cpp
+
+Random.o: Random.cpp Random.h
+	$(CC) $(CFLAGS) Random.cpp
 
 clean:
 	rm -rf *.o

@@ -11,6 +11,8 @@
 #include "memory_manager.h"
 #include "bit_operations.h"
 #include "FIFO.h"
+#include "Random.h"
+#include "RandomNumber.h"
 
 using namespace std;
 
@@ -35,6 +37,9 @@ void getPRAlgorithm(int algo) {
 	switch(algo) { 
 		case 'f':
 			pr_algo = new FIFO();
+			break;
+		case 'r':
+			pr_algo = new Random();
 			break;
 	}
 }
@@ -72,6 +77,9 @@ int main(int argc, char *argv[]) {
     instFile = fopen(argv[optind], "r");
     rFile = fopen(argv[optind + 1], "r");
 	
+	RandomNumber *rnd = new RandomNumber(rFile);
+	pr_algo->initializeRandom(*rnd);
+	
 
 	/* Read instruction set one line at a time */
 	while(!feof(instFile)) {
@@ -81,6 +89,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 	
+	mmu->printOptions();
 	
     fclose(rFile);
     fclose(instFile);

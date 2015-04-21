@@ -17,7 +17,7 @@ MMU::MMU(int n, PR_Algorithm *algo) {
 	counter = 0;
 	
 	frames = vector<unsigned int>();
-	ftop = vector<unsigned int>(num_frames);
+	ftop = vector<unsigned int>(num_frames, -1);
 	
 	O = P = F = S = false;
 	map_counter = unmap_counter = zero_counter = in_counter = out_counter = 0;
@@ -34,6 +34,43 @@ void MMU::setOptions(char* optarg) {
 	}
 }
 
+void MMU::printOptions() {
+	if (P) {
+        for (int i = 0; i < pages.size(); i++) {
+            if (bitop->GET_PRESENT(pages[i]) == 1) {
+                cout << i << ": ";
+                (bitop->GET_REFERENCED(pages[i]) == 1)? cout << "R" : cout << "-";
+                (bitop->GET_MODIFIED(pages[i]) == 1)? cout << "M" :  cout << "-";
+                (bitop->GET_PAGEDOUT(pages[i]) == 1)? cout << "S " : cout << "- ";
+            } else {
+                (bitop->GET_PAGEDOUT(pages[i]) == 1)? cout << "# " :  cout << "* ";                
+            }
+        }
+        cout << endl;
+    }
+	
+	if (F) {
+        for (int i = 0; i < ftop.size(); i++) {
+            (ftop[i] == -1)? cout << "* " : cout << ftop[i] << " ";            
+        }
+        cout << endl;
+    }
+	
+	if(S) {
+	    unsigned long long cost;
+
+        cost =  counter + 400 * (map_counter + unmap_counter)
+				+ 3000 * (in_counter + out_counter)
+                + 150 * zero_counter;
+
+
+        cout << "SUM " << counter << " U=" << unmap_counter << " M=" << map_counter;
+		cout << " I=" << in_counter << " O=" << out_counter << " Z=" << zero_counter << " ===> " << cost << endl;
+    
+	}
+	
+}
+
 void MMU::mapPagesToFrames(int &operation, int &pageid) {
 	/* Get the virtual page */
 	PTE& page = pages[pageid];
@@ -43,14 +80,7 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
         cout << "==> inst: " << operation << " " << pageid << endl;
     }
 
-	if(bitop->GET_PRESENT(page)) {// page is already present
-		/*if(operation == 0) {
-			bitop->SET_REFERENCED(page);
-		} else {
-			bitop->SET_REFERENCED(page);
-			bitop->SET_MODIFIED(page);
-		}*/
-	} else { // page is absent
+	if(!bitop->GET_PRESENT(page)) { // page is absent
 		if(frames.size() < num_frames) { // free list
 			framenumber = frames.size();
 			
@@ -59,7 +89,7 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 			ftop[framenumber] = pageid;
 			
 			if(O) {
-				cout << counter << ": ZERO " << setfill(' ') << setw(8) << pageid << endl;
+				cout << counter << ": ZERO " << setfill(' ') << setw(8) << framenumber << endl;
 				cout << counter << ": MAP  " << setfill(' ') << setw(4) << pageid << framenumber << endl;
 			}
 			zero_counter++;
@@ -101,7 +131,7 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 				in_counter++;
 			} else {
 				if(O) {
-					cout << counter << ": ZERO "  << setfill(' ') << setw(8) << old_pageid << endl;
+					cout << counter << ": ZERO "  << setfill(' ') << setw(8) << framenumber << endl;
 				}
 				zero_counter++;
 			}
@@ -113,7 +143,7 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 		
 		bitop->SET_PRESENT(page);
 		
-	} // if present
+	} // if absent
 	
 	if(operation == 0) {
 		bitop->SET_REFERENCED(page);
@@ -125,3 +155,4 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 	counter++;
 		
 }
+

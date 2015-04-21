@@ -14,7 +14,8 @@ using namespace std;
 
 class MMU {
 	private:
-		unsigned int num_frames, counter, unmap_counter, map_counter, in_counter, out_counter, zero_counter;
+		unsigned int num_frames;
+		long long counter, unmap_counter, map_counter, in_counter, out_counter, zero_counter;
 		bool O,P,F,S;
 		BitOP *bitop;
 		PR_Algorithm *pr_algo;
@@ -27,6 +28,7 @@ class MMU {
 		MMU();
 		MMU(int, PR_Algorithm*);
 		void setOptions(char*);
+		void printOptions();
 		void mapPagesToFrames(int&, int&);
 };
 
