@@ -14,6 +14,7 @@ class PR_Algorithm {
 		RandomNumber rnd;
 		BitOP *bitop;
 		void initializeRandom(RandomNumber&);
+		virtual void updateCounter(vector<unsigned int>&, int);
 		virtual int getFrame(vector<PTE>&, vector<unsigned int>&, vector<unsigned int>&) = 0;
 };
 

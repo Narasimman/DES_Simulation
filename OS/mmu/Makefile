@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall
 LFLAGS=
-OBJS=main.o memory_manager.o bit_operations.o PR_algorithm_base.o RandomNumber.o FIFO.o Random.o SecondChance.o ClockFrame.o ClockVirtual.o
+OBJS=main.o memory_manager.o bit_operations.o PR_algorithm_base.o RandomNumber.o FIFO.o Random.o SecondChance.o ClockFrame.o ClockVirtual.o NRU.o LRU.o AgingFrame.o AgingVirtual.o
 
 mmu-executable: $(OBJS)
 	$(CC) $(LFLAGS) $(OBJS) -o mmu-executable
@@ -36,6 +36,18 @@ ClockFrame.o: ClockFrame.cpp ClockFrame.h
 ClockVirtual.o: ClockVirtual.cpp ClockVirtual.h
 	$(CC) $(CFLAGS) ClockVirtual.cpp
 
+NRU.o: NRU.cpp NRU.h
+	$(CC) $(CFLAGS) NRU.cpp
+
+LRU.o: LRU.cpp LRU.h
+	$(CC) $(CFLAGS) LRU.cpp
+
+AgingFrame.o: AgingFrame.cpp AgingFrame.h
+	$(CC) $(CFLAGS) AgingFrame.cpp
+
+AgingVirtual.o: AgingVirtual.cpp AgingVirtual.h
+	$(CC) $(CFLAGS) AgingVirtual.cpp
+	
 clean:
 	rm -rf *.o
 

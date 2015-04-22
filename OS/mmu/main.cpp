@@ -15,6 +15,10 @@
 #include "SecondChance.h"
 #include "ClockFrame.h"
 #include "ClockVirtual.h"
+#include "NRU.h"
+#include "LRU.h"
+#include "AgingFrame.h"
+#include "AgingVirtual.h"
 #include "RandomNumber.h"
 
 using namespace std;
@@ -53,7 +57,18 @@ void getPRAlgorithm(int algo) {
 		case 'X':
 			pr_algo = new ClockVirtual();
 			break;
-		
+		case 'N':
+			pr_algo = new NRU();
+			break;
+		case 'l':
+			pr_algo = new LRU();
+			break;
+		case 'a':
+			pr_algo = new AgingFrame();
+			break;
+		case 'Y':
+			pr_algo = new AgingVirtual();
+			break;
 	}
 }
 

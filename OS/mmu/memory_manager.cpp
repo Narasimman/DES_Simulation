@@ -75,7 +75,7 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 	/* Get the virtual page */
 	PTE& page = pages[pageid];
 
-	int framenumber;
+	int framenumber = -1;
 	if (O) {
         cout << "==> inst: " << operation << " " << pageid << endl;
     }
@@ -145,6 +145,10 @@ void MMU::mapPagesToFrames(int &operation, int &pageid) {
 		bitop->SET_PRESENT(page);
 		
 	} // if absent
+	else {
+		// LRU
+		pr_algo->updateCounter(frames, page.framenumber);		
+	}
 	
 	if(operation == 0) {
 		bitop->SET_REFERENCED(page);

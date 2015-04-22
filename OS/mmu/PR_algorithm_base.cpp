@@ -10,6 +10,9 @@ void PR_Algorithm::initializeRandom(RandomNumber& r) {
 	bitop = new BitOP();
 }
 
+void PR_Algorithm::updateCounter(vector<unsigned int> &frames, int fnumber) {
+}
+
 int PR_Algorithm::getFrame(vector<PTE> &pte, vector<unsigned int> &frame, vector<unsigned int> &ftop) {
 	return -1;
 }
