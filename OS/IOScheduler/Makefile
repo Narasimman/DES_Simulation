@@ -1,7 +1,7 @@
 CC=g++
 CFLAGS=-c -Wall
 LFLAGS=
-OBJS=main.o event.o processor.o scheduler.o FIFO.o
+OBJS=main.o event.o processor.o scheduler.o FIFO.o SSTF.o
 
 iosched: $(OBJS)
 	$(CC) $(LFLAGS) $(OBJS) -o iosched
@@ -20,6 +20,9 @@ scheduler.o: scheduler.cpp scheduler.h
 
 FIFO.o: FIFO.cpp FIFO.h
 	$(CC) $(CFLAGS) FIFO.cpp
+	
+SSTF.o: SSTF.cpp SSTF.h
+	$(CC) $(CFLAGS) SSTF.cpp
 
 clean:
 	rm -rf *.o

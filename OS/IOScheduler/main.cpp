@@ -12,6 +12,7 @@
 #include "processor.h"
 #include "scheduler.h"
 #include "FIFO.h"
+#include "SSTF.h"
 
 using namespace std;
 
@@ -35,6 +36,9 @@ void getPRAlgorithm(int algo) {
 		case 'i':
 			iosched = new FIFOScheduler();
 			break;
+		case 'j':
+			iosched = new SSTFScheduler();
+			break;
 	}
 }
 
@@ -47,6 +51,7 @@ int main(int argc, char *argv[]) {
             case 's':
 				getPRAlgorithm(optarg[0]);
                 break;
+
             default:
                 break;
         }

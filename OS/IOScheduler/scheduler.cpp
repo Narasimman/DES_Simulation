@@ -10,6 +10,10 @@ vector<Event> Scheduler::getReadyQueue() {
     return ioQueue;
 }
 
+void Scheduler::setCurrentLocation(int track) {
+	current_location = track;
+}
+
 // Insert an event based on the timestamp. Time stamp ordered event queue
 void Scheduler::putEvent(Event e) {
    ioQueue.push_back(e);

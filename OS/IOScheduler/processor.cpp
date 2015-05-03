@@ -53,10 +53,10 @@ void Processor::handler() {
 	bool iorunning = false;
 	
 	int currenttime = 0, next_available = 0, current_end = 0;
-	unsigned int processed = 0, total = eventQueue.size();
+	unsigned int total = eventQueue.size();
 	
 	int turnaround_time = 0, wait_time = 0, max_wait = 0, total_movement = 0;
-	while(processed < total) {		
+	while( iorunning || !this->queueEmpty() || !sched->queueEmpty()) {
 		if(!iorunning) {
 			if(sched->queueEmpty()) {				
 				e = this->getEvent();
@@ -90,13 +90,13 @@ void Processor::handler() {
 			}
 			
 			current_end = e.location;
+			sched->setCurrentLocation(current_end);
 			currenttime = next_available;
 			
 			turnaround_time += (currenttime - e.timestamp);
 			
 			//finish
 			printstatus(e, 2, (currenttime - e.timestamp), currenttime);
-			processed++;
 			iorunning = false;
 		}
 	

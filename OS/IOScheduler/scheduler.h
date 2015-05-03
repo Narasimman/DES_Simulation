@@ -9,12 +9,16 @@ class Scheduler {
     protected:
 		//Queue
 		vector<Event> ioQueue;
+		// current displacement of the track head
+		int current_location;
  
     public:
 
         void setReadyQueue(vector<Event>&);
         vector<Event> getReadyQueue();
 
+		void setCurrentLocation(int);
+		
 		// getters and setters
         Event getEvent();
         void putEvent(Event);
