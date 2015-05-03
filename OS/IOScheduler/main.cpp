@@ -8,9 +8,15 @@
 #include <unistd.h>
 #include <iomanip>
 
+#include "event.h"
+#include "processor.h"
+#include "scheduler.h"
+#include "FIFO.h"
+
 using namespace std;
 
 FILE* instFile;
+Scheduler *iosched;
 
 bool getNextInstruction(int &timestep, int &track) {
 	char buf[1000];
@@ -26,7 +32,8 @@ bool getNextInstruction(int &timestep, int &track) {
 
 void getPRAlgorithm(int algo) {
 	switch(algo) { 
-		case 'f':
+		case 'i':
+			iosched = new FIFOScheduler();
 			break;
 	}
 }
@@ -34,7 +41,7 @@ void getPRAlgorithm(int algo) {
 int main(int argc, char *argv[]) {
     
     int c;
-	int timestep, track;
+	int timestep, track, reqId = 0;
 	while ((c = getopt (argc, argv, "s:")) != -1) {
         switch(c) {
             case 's':
@@ -52,14 +59,19 @@ int main(int argc, char *argv[]) {
     }
 
     instFile = fopen(argv[optind], "r");
+	
+	Processor *ioproc = new Processor(iosched);
 
 	/* Read instruction set one line at a time */
 	while(!feof(instFile)) {
-		if(getNextInstruction(timestep, track)) {
-		
-			cout << timestep << "  " << track << endl;
+		if(getNextInstruction(timestep, track)) {			
+			Event e(timestep, reqId, track);
+			ioproc->putEvent(e);
+			reqId++;
 		}
 	}
+	// ioHandler
+	ioproc->handler();
 	
 	fclose(instFile);
     return 0;
