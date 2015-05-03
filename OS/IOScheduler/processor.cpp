@@ -1,6 +1,7 @@
 #include "processor.h"
 #include <iomanip>
 #include <cstdlib>
+#include <cstdio>
 #include <vector>
 #include <iostream>
 
@@ -8,6 +9,7 @@ using namespace std;
 
 Processor::Processor(Scheduler *s) {
 	sched = s;
+	verbose = true;
 }
 
 Event Processor::getEvent() {
@@ -35,7 +37,17 @@ bool Processor::queueEmpty() {
     return eventQueue.empty();
 }
 
-
+void Processor::printstatus(Event e, int type, int current, int currenttime) {
+	if(verbose) {
+		if(type == 1) {
+			cout << setw(5) << setfill(' ') << currenttime << ":" << setw(6) << setfill(' ') << e.id << " issue " << e.location << " " << current << endl;
+		} else if(type == 0) {
+			cout << setw(5) << setfill(' ') << e.timestamp << ":" << setw(6) << setfill(' ') << e.id << " add " << e.location << endl;
+		} else {
+			cout << setw(5) << setfill(' ') << currenttime << ":" << setw(6) << setfill(' ') << e.id << " finish " << current << endl;
+		}
+	}		
+}
 void Processor::handler() {
 	Event e;
 	bool iorunning = false;
@@ -43,26 +55,37 @@ void Processor::handler() {
 	int currenttime = 0, next_available = 0, current_end = 0;
 	unsigned int processed = 0, total = eventQueue.size();
 	
-	int turnaround_time = 0;
-	while(processed < total) {
-		
+	int turnaround_time = 0, wait_time = 0, max_wait = 0, total_movement = 0;
+	while(processed < total) {		
 		if(!iorunning) {
-			if(!sched->queueEmpty()) {
-				e = sched->get_next_io();
-				cout << setw(5) << setfill(' ') << currenttime << ":" << setw(6) << setfill(' ') << e.id << " issue " << e.location << " " << current_end << endl;				
-				iorunning = true;
-			} else {
+			if(sched->queueEmpty()) {				
 				e = this->getEvent();
 				sched->putEvent(e);
 				currenttime = e.timestamp;
-				cout << setw(5) << setfill(' ') << e.timestamp << ":" << setw(6) << setfill(' ') << e.id << " add " << e.location << endl;
+				
+				//add
+				printstatus(e, 0, 0, currenttime);
+			} else {				
+				e = sched->get_next_io();
+				
+				//issue
+				printstatus(e, 1, current_end, currenttime);
+				total_movement += abs(current_end - e.location);
+				int waiting = abs(currenttime - e.timestamp);
+				wait_time += waiting;
+				if(waiting > max_wait) {
+					max_wait =  waiting;
+				}
+				iorunning = true;
 			}
 		} else {
 			next_available = currenttime + abs(current_end - e.location);
 			while(!this->queueEmpty() && eventQueue[0].timestamp <= next_available) {
 				Event event = this->getEvent();
 				sched->putEvent(event);
-				cout << setw(5) << setfill(' ') << event.timestamp << ":" << setw(6) << setfill(' ') << event.id << " add " << event.location << endl;
+				
+				//add
+				printstatus(event, 0, 0, currenttime);		
 				currenttime = event.timestamp;
 			}
 			
@@ -71,11 +94,16 @@ void Processor::handler() {
 			
 			turnaround_time += (currenttime - e.timestamp);
 			
-			cout << setw(5) << setfill(' ') << currenttime << ":" << setw(6) << setfill(' ') << e.id << " finish " << (currenttime - e.timestamp) << endl;
+			//finish
+			printstatus(e, 2, (currenttime - e.timestamp), currenttime);
 			processed++;
 			iorunning = false;
 		}
 	
 	}
+	
+	printf("SUM: %d %d %.2lf %.2lf %d\n", currenttime, total_movement,
+            (double)turnaround_time / total, (double)wait_time / total,
+            max_wait);
 
 }

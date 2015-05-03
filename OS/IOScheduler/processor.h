@@ -10,6 +10,7 @@ class Processor {
     private:
 		Scheduler *sched;
 		vector<Event> eventQueue;
+		bool verbose;
     
     public:
         // getters and setters
@@ -17,6 +18,8 @@ class Processor {
         void putEvent(Event);
 
         bool queueEmpty();
+		
+		void printstatus(Event, int, int, int);
     
 		void handler();
         Processor();

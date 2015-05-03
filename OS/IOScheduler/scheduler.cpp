@@ -12,14 +12,7 @@ vector<Event> Scheduler::getReadyQueue() {
 
 // Insert an event based on the timestamp. Time stamp ordered event queue
 void Scheduler::putEvent(Event e) {
-   int loc = ioQueue.size();
-   for (unsigned int i = 0; i < ioQueue.size(); ++i) {
-       if (e.timestamp < ioQueue[i].timestamp) {
-           loc = i;
-           break;
-       }
-   }
-   ioQueue.insert(ioQueue.begin() + loc, e);
+   ioQueue.push_back(e);
 }
 
 bool Scheduler::queueEmpty() {
