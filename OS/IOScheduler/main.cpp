@@ -13,6 +13,9 @@
 #include "scheduler.h"
 #include "FIFO.h"
 #include "SSTF.h"
+#include "SCAN.h"
+#include "CSCAN.h"
+#include "FSCAN.h"
 
 using namespace std;
 
@@ -38,6 +41,15 @@ void getPRAlgorithm(int algo) {
 			break;
 		case 'j':
 			iosched = new SSTFScheduler();
+			break;
+		case 's':
+			iosched = new SCANScheduler();
+			break;
+		case 'c':
+			iosched = new CSCANScheduler();
+			break;
+		case 'f':
+			iosched = new FSCANScheduler();
 			break;
 	}
 }

@@ -11,6 +11,8 @@ class Event {
         int id;
 		// location
         int location;
+		
+		int getLocation();
 
         Event();
         Event(int, int, int);

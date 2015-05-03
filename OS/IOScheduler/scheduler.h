@@ -11,6 +11,8 @@ class Scheduler {
 		vector<Event> ioQueue;
 		// current displacement of the track head
 		int current_location;
+		
+		bool ltr;
  
     public:
 
@@ -18,12 +20,13 @@ class Scheduler {
         vector<Event> getReadyQueue();
 
 		void setCurrentLocation(int);
+		int getCurrentLocation();
 		
 		// getters and setters
         Event getEvent();
-        void putEvent(Event);
+        virtual void putEvent(Event) = 0;
 
-        bool queueEmpty();
+        virtual bool queueEmpty() = 0;
 		
         // returns the next io available in the ready queue
         virtual Event get_next_io() = 0;

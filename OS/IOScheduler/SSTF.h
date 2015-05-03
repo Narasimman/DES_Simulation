@@ -8,8 +8,9 @@ using namespace std;
 class SSTFScheduler : public Scheduler {
     public:
         SSTFScheduler();
-
-        Event get_next_io();        
+        void putEvent(Event);
+        Event get_next_io();       
+         bool queueEmpty();
 };
 
 #endif

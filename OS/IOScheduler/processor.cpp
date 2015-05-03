@@ -9,7 +9,7 @@ using namespace std;
 
 Processor::Processor(Scheduler *s) {
 	sched = s;
-	verbose = true;
+	verbose = false;
 }
 
 Event Processor::getEvent() {
@@ -40,11 +40,11 @@ bool Processor::queueEmpty() {
 void Processor::printstatus(Event e, int type, int current, int currenttime) {
 	if(verbose) {
 		if(type == 1) {
-			cout << setw(5) << setfill(' ') << currenttime << ":" << setw(6) << setfill(' ') << e.id << " issue " << e.location << " " << current << endl;
+			cout << currenttime << ":" << setw(6) << setfill(' ') << e.id << " issue " << e.location << " " << current << endl;
 		} else if(type == 0) {
-			cout << setw(5) << setfill(' ') << e.timestamp << ":" << setw(6) << setfill(' ') << e.id << " add " << e.location << endl;
+			cout << e.timestamp << ":" << setw(6) << setfill(' ') << e.id << " add " << e.location << endl;
 		} else {
-			cout << setw(5) << setfill(' ') << currenttime << ":" << setw(6) << setfill(' ') << e.id << " finish " << current << endl;
+			cout << currenttime << ":" << setw(6) << setfill(' ') << e.id << " finish " << current << endl;
 		}
 	}		
 }

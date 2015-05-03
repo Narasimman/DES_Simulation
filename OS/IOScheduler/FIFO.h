@@ -8,8 +8,9 @@ using namespace std;
 class FIFOScheduler : public Scheduler {
     public:
         FIFOScheduler();
-
-        Event get_next_io();        
+        void putEvent(Event);
+        Event get_next_io();
+        bool queueEmpty();
 };
 
 #endif

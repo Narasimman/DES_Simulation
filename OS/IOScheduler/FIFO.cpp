@@ -3,7 +3,8 @@
 
 using namespace std;
 
-FIFOScheduler::FIFOScheduler() {}
+FIFOScheduler::FIFOScheduler() {
+}
 
 Event FIFOScheduler::get_next_io() {
     Event e;
@@ -13,3 +14,12 @@ Event FIFOScheduler::get_next_io() {
     }
     return e;
 }
+
+void FIFOScheduler::putEvent(Event e)  {
+    ioQueue.push_back(e);    
+}
+
+bool FIFOScheduler::queueEmpty() {
+    return ioQueue.empty();
+ }
+

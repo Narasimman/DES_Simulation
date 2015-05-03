@@ -22,3 +22,13 @@ Event SSTFScheduler::get_next_io() {
     ioQueue.erase(ioQueue.begin() + min_index);
     return e;
 }
+
+void SSTFScheduler::putEvent(Event e)  {
+    ioQueue.push_back(e);
+ }
+
+bool SSTFScheduler::queueEmpty() {
+      return ioQueue.empty();
+ }
+
+

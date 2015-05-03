@@ -10,3 +10,7 @@ Event::Event(int t, int eid, int loc){
     id = eid;
     location = loc;
 }
+
+int Event::getLocation() {
+	return location;
+}
